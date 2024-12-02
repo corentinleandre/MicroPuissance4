@@ -1,2 +1,2 @@
 # MicroPuissance4
-A typecript connect four project to show the upsides ot the microservices architecture
+Un projet typescript de Puissance 4 pour montrer les avantages de l'architecture microservices
