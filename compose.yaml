@@ -1,5 +1,5 @@
 networks:
-  dbnw:
+  userdbnw:
 
 services:
   db:
@@ -10,7 +10,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_U}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PWD}
     networks:
-      - dbnw
+      - userdbnw
     ports:
       - 27017:27017
     volumes:
@@ -20,7 +20,7 @@ services:
     image: mongo-express
     # restart: always
     networks:
-      - dbnw
+      - userdbnw
     ports:
       - 8081:8081
     # env_file: .env
@@ -31,3 +31,10 @@ services:
 
   authenticator:
     build: ./Authenticator
+    environment:
+      MONGO_ROOT_U: ${MONGO_ROOT_U}
+      MONGO_ROOT_PWD: ${MONGO_ROOT_PWD}
+      GAME_DATABASE: ${GAME_DATABASE}
+      GAME_ADMIN_PASS: ${GAME_ADMIN_PASS}
+    networks:
+      - userdbnw

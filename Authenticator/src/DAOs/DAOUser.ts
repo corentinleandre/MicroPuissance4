@@ -11,7 +11,7 @@ interface IUser {
 const userSchema = new Schema<IUser>({
     uid: {type: String, required: true, index: {unique: true, sparse: false}},
     password: {type: String, required: true},
-    token: {type:String}
+    token: {type:String, index: {}}
 })
 
 const UserModel = model<IUser>('User', userSchema);
