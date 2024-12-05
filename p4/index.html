@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puissance 4</title>
+  <style>
+    /* Style pour le plateau de jeu */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, 50px);
+      grid-gap: 5px;
+      margin-bottom: 20px;
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      cursor: pointer;
+    }
+
+    .column {
+      margin-top: 20px;
+    }
+
+    .message {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Jeu Puissance 4</h1>
+<div class="board" id="board"></div>
+<div class="message" id="message">Joueur X, à vous de jouer!</div>
+
+<script src="dist/game.js"></script>
+</body>
+</html>
