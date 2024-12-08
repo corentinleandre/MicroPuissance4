@@ -19,6 +19,8 @@ services:
   mongo-express:
     image: mongo-express
     # restart: always
+    depends_on:
+      - db
     networks:
       - userdbnw
     ports:
@@ -34,7 +36,17 @@ services:
     environment:
       MONGO_ROOT_U: ${MONGO_ROOT_U}
       MONGO_ROOT_PWD: ${MONGO_ROOT_PWD}
-      GAME_DATABASE: ${GAME_DATABASE}
-      GAME_ADMIN_PASS: ${GAME_ADMIN_PASS}
+      MP4_DATABASE: ${MP4_DATABASE}
+      MP4_ADMIN_PASS: ${MP4_ADMIN_PASS}
     networks:
       - userdbnw
+    depends_on:
+      - db
+  
+  token-manager:
+    build: ./TokenManager
+    environment:
+      MONGO_ROOT_U: ${MONGO_ROOT_U}
+      MONGO_ROOT_PWD: ${MONGO_ROOT_PWD}
+      MP4_DATABASE: ${MP4_DATABASE}
+      MP4_ADMIN_PASS: ${MP4_ADMIN_PASS}

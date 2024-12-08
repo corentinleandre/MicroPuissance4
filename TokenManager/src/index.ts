@@ -3,8 +3,8 @@ import { Server } from "socket.io";
 import dotenv from 'dotenv'
 import fs from 'fs'
 import { isEqual } from 'lodash';
-import { DAOUser } from './DAOs/DAOUser';
-import { User } from './model/User';
+import { DAOToken } from './DAOs/DAOToken';
+import { Token } from './model/Token';
 
 dotenv.config({path: __dirname + "./../../.env"});
 
@@ -15,17 +15,14 @@ const uri = "mongodb://db:27017/" + dbname ;
 // for server 
 var connection = new MongooseConnection(uri, { "authSource": "admin", "auth": {"username": process.env.MONGO_ROOT_U, "password": process.env.MONGO_ROOT_PWD}});
 //console.log(connection.client);
-var daouserprom = DAOUser.create(connection);
+var daotokenprom = DAOToken.create(connection);
 
-let test_user : User = new User("IlCorentino","StrikesBack");
-daouserprom.then((daouser) => {
-    daouser.saveUser(test_user).then(()=>{
-        console.log("save success");
-    }).catch((err) => {
-        console.log(err);
-    })
-}).catch((err) => {
-    console.log(err);
+let test_token : Token = new Token("IlCorentino");
+daotokenprom.then((token) =>{
+    token.getTokenByUser(test_token.user)
+        .then((dbtoken) => {
+            
+        })
 })
 
 const ip = "localhost"
