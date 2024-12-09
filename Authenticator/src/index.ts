@@ -6,8 +6,6 @@ import { isEqual } from 'lodash';
 import { DAOUser } from './DAOs/DAOUser';
 import { User } from './model/User';
 
-dotenv.config({path: __dirname + "./../../.env"});
-
 let dbname = process.env.MP4_DATABASE;
 console.log(process.env);
 //                       wtf is this ?
@@ -40,11 +38,13 @@ const io = new Server(3001, {
 io.on("connection", (socket) => {
     console.log("A user connected");
 
-    socket.on("HW", (arg) => {
+    socket.emit("AskAuth", null);
+
+    socket.on("Auth", (arg) => {
         console.log(arg);
     });
 
-    socket.emit("Ack", "Ackh !");
+    
 });
 
 console.log("finished");

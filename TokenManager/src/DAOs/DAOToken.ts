@@ -10,7 +10,6 @@ interface IToken {
 
 const tokenSchema = new Schema<IToken>({
     user: {type: String, required: true, index: {unique: true, sparse: false}},
-    value: {type: String, required:false},
     createdAt: {type: Date, index: {expires: '2m'}, required:true}
 })
 
@@ -31,9 +30,6 @@ class DAOToken{
         let dbToken = await TokenModel.findOne({user: token.user}).exec();
         if(dbToken){
             dbToken.user = token.user;
-            if(token.value){
-                dbToken.value = token.value;
-            }
             dbToken.createdAt = new Date(Date.now());
             dbToken = await dbToken.save();
             token.dbid = dbToken._id;
@@ -41,7 +37,6 @@ class DAOToken{
         }
         dbToken = await new TokenModel({
             user: token.user,
-            value: token.value,
             createdAt: new Date(Date.now())
         }).save();
         token.dbid = dbToken._id;
@@ -84,7 +79,6 @@ class DAOToken{
     private async DBTokenToToken(dbtoken:TokenReturn){
         let retToken = new Token(dbtoken.user);
         retToken.dbid = dbtoken._id;
-        retToken.value = dbtoken.value;
         return retToken;
     }
 

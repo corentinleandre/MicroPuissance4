@@ -6,8 +6,6 @@ import { isEqual } from 'lodash';
 import { DAOToken } from './DAOs/DAOToken';
 import { Token } from './model/Token';
 
-dotenv.config({path: __dirname + "./../../.env"});
-
 let dbname = process.env.MP4_DATABASE;
 console.log(process.env);
 //                       wtf is this ?
@@ -18,11 +16,10 @@ var connection = new MongooseConnection(uri, { "authSource": "admin", "auth": {"
 var daotokenprom = DAOToken.create(connection);
 
 let test_token : Token = new Token("IlCorentino");
-daotokenprom.then((token) =>{
-    token.getTokenByUser(test_token.user)
-        .then((dbtoken) => {
-            
-        })
+daotokenprom.then((daotoken) =>{
+    daotoken.saveToken(test_token).then(() => {
+        console.log("save success");
+    });
 })
 
 const ip = "localhost"

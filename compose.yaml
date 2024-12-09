@@ -50,3 +50,7 @@ services:
       MONGO_ROOT_PWD: ${MONGO_ROOT_PWD}
       MP4_DATABASE: ${MP4_DATABASE}
       MP4_ADMIN_PASS: ${MP4_ADMIN_PASS}
+    networks:
+      - userdbnw
+    depends_on:
+      - db
