@@ -1,5 +1,6 @@
 networks:
   userdbnw:
+  outnw:
 
 services:
   db:
@@ -40,6 +41,7 @@ services:
       MP4_ADMIN_PASS: ${MP4_ADMIN_PASS}
     networks:
       - userdbnw
+      - outnw
     depends_on:
       - db
   
@@ -52,5 +54,13 @@ services:
       MP4_ADMIN_PASS: ${MP4_ADMIN_PASS}
     networks:
       - userdbnw
+      - outnw
     depends_on:
       - db
+  
+  client:
+    build: ./Client
+    networks:
+      - outnw
+    ports:
+      - 3000:3000

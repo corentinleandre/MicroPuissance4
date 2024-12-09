@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
     socket.emit("AskAuth", null);
 
     socket.on("Auth", (arg) => {
-        console.log(arg);
+        
     });
 
     
