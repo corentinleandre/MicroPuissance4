@@ -7,7 +7,6 @@ import { DAOToken } from './DAOs/DAOToken';
 import { Token } from './model/Token';
 
 let dbname = process.env.MP4_DATABASE;
-console.log(process.env);
 //                       wtf is this ?
 const uri = "mongodb://db:27017/" + dbname ;
 // for server 

@@ -7,7 +7,6 @@ import { DAOUser } from './DAOs/DAOUser';
 import { User } from './model/User';
 
 let dbname = process.env.MP4_DATABASE;
-console.log(process.env);
 //                       wtf is this ?
 const uri = "mongodb://db:27017/" + dbname ;
 // for server 
@@ -41,7 +40,7 @@ io.on("connection", (socket) => {
     socket.emit("AskAuth", null);
 
     socket.on("Auth", (arg) => {
-        
+        console.log(arg);
     });
 
     
