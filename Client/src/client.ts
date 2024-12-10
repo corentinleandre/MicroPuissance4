@@ -16,4 +16,8 @@ window.addEventListener('load', () => {
             socket.emit("Auth", {"Username" : authscreen.usernameInput.value, "Password" : authscreen.passwordInput.value});
         })
     });
+
+    socket.on("Authenticated", () =>{
+        
+    })
 })

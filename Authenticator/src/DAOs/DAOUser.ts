@@ -4,14 +4,12 @@ import { MongooseConnection } from "../database/connect";
 
 interface IUser {
     uid:string,
-    password:string,
-    token:string
+    password:string
 }
 
 const userSchema = new Schema<IUser>({
     uid: {type: String, required: true, index: {unique: true, sparse: false}},
-    password: {type: String, required: true},
-    token: {type:String, index: {}}
+    password: {type: String, required: true}
 })
 
 const UserModel = model<IUser>('User', userSchema);
@@ -32,17 +30,13 @@ class DAOUser{
         if(dbUser){
             dbUser.uid = user.uid;
             dbUser.password = user.password;
-            if(user.token){
-                dbUser.token = user.token;
-            }
             dbUser = await dbUser.save();
             user.dbid = dbUser._id;
             return user;
         }
         dbUser = await new UserModel({
             uid: user.uid,
-            password: user.password,
-            token: user.token
+            password: user.password
         }).save();
         user.dbid = dbUser._id;
         return user;
@@ -86,11 +80,8 @@ class DAOUser{
             dbuser.password
         );
         retUser.dbid = dbuser._id;
-        retUser.token = dbuser.token;
         return retUser;
     }
-
-    
 }
 
 export { DAOUser, IUser }

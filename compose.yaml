@@ -44,6 +44,7 @@ services:
       - outnw
     depends_on:
       - db
+      - token-manager
     ports:
       - 3001:3001
   
