@@ -17,7 +17,7 @@ window.addEventListener('load', () => {
         })
     });
 
-    socket.on("Authenticated", () =>{
-        
+    socket.on("NewToken", (token) =>{
+        console.log(token);
     })
 })

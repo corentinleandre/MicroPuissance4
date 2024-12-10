@@ -6,6 +6,7 @@ import fs from 'fs'
 import { isEqual } from 'lodash';
 import { DAOUser } from './DAOs/DAOUser';
 import { User } from './model/User';
+import { Collection } from 'mongoose';
 
 let dbname = process.env.MP4_DATABASE;
 //                       wtf is this ?
@@ -32,8 +33,6 @@ daouserprom.then((daouser) => {
             methods: ["GET", "POST"]
         }
     });
-
-    const tokenManagerSocket = io("http://token-manager:3001");
     
     ioServer.on("connection", (socket) => {
         console.log("A user connected");
@@ -51,7 +50,12 @@ daouserprom.then((daouser) => {
                 return;
             }
 
-
+            let tokenManagerSocket = io("http://token-manager:3001");
+            tokenManagerSocket.on("CreatedToken", (token) => {
+                socket.emit("NewToken", token);
+                tokenManagerSocket.close();
+            })
+            tokenManagerSocket.emit("CreateToken", arg.Username);
         });
     
         

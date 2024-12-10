@@ -14,30 +14,33 @@ var connection = new MongooseConnection(uri, { "authSource": "admin", "auth": {"
 //console.log(connection.client);
 var daotokenprom = DAOToken.create(connection);
 
+const ip = "localhost"
+
 let test_token : Token = new Token("IlCorentino");
 daotokenprom.then((daotoken) =>{
-    daotoken.saveToken(test_token).then(() => {
+    /*daotoken.saveToken(test_token).then(() => {
         console.log("save success");
+    });*/
+
+    const io = new Server(3001, {
+        cors: {
+            origin: "http://" + ip + ":3000",
+            methods: ["GET", "POST"]
+        }
+    });
+    
+    io.on("connection", (socket) => {
+        socket.on("CreateToken", async (username) => {
+            let token = new Token(username);
+            daotoken.saveToken(token).then((token) => {
+                socket.emit("CreatedToken", token.dbid);
+            })
+        })
     });
 })
 
-const ip = "localhost"
 
-const io = new Server(3001, {
-    cors: {
-        origin: "http://" + ip + ":3000",
-        methods: ["GET", "POST"]
-    }
-});
 
-io.on("connection", (socket) => {
-    console.log("A user connected");
 
-    socket.on("HW", (arg) => {
-        console.log(arg);
-    });
-
-    socket.emit("Ack", "Ackh !");
-});
 
 console.log("finished");
