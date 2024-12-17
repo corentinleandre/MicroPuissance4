@@ -2,6 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { AuthScreen } from "./Screens/AuthScreen";
 import { ModeScreen } from "./Screens/ModeScreen";
 import { AnonymousChoiceScreen } from "./Screens/AnonymousChoiceScreen";
+import { GameScreen } from "./Screens/GameScreen";
 import { SocketType } from "./ServerLibs/SocketType";
 
 enum ClientMode {
@@ -13,6 +14,7 @@ const ip = "localhost"
 var token = "";
 var mode:ClientMode = ClientMode.Anonymous;
 var gameId: Number;
+var whichPlayer = '';
 
 console.log("launched");
 
@@ -104,7 +106,48 @@ function makeAnonymousGameManagerSocket():Socket | undefined{
     if(!socketAddress) return undefined;
     let anonymousGameManagerSocket = io(socketAddress);
     if(anonymousGameManagerSocket){
-        
+        let gameScreen = GameScreen.makeScreen(document);
+        anonymousGameManagerSocket.on("Joined", (arg) => {
+            this.whichPlayer = arg;
+            if(this.whichPlayer == 'X'){
+                gameScreen.message.innerHTML = "Your turn";
+            }else{
+                gameScreen.message.innerHTML = "Waiting for opponent";
+            }
+        })
+
+        anonymousGameManagerSocket.on("UpdateBoard", (arg) => {
+            let newBoard = arg.board;
+            let nextPlayer = arg.player;
+            gameScreen.board.innerHTML = '';
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+            
+                    if (newBoard[row][col] === 'X') {
+                        cell.style.backgroundColor = 'red';
+                    } else if (newBoard[row][col] === 'O') {
+                        cell.style.backgroundColor = 'yellow';
+                    }
+            
+                    cell.dataset.row = row.toString();
+                    cell.dataset.col = col.toString();
+                    cell.addEventListener('click', () => {
+                        anonymousGameManagerSocket.emit("Play", {"player": this.whichPlayer, "col":col});
+                    });
+                    gameScreen.board.appendChild(cell);
+                }
+            }
+
+            if(nextPlayer == whichPlayer){
+                gameScreen.message.innerHTML = "Your turn";
+            }else{
+                gameScreen.message.innerHTML = "Waiting for opponent";
+            }
+        })
+
+        anonymousGameManagerSocket.emit("Join", gameId);
     }
     return anonymousGameManagerSocket;
 }

@@ -1,4 +1,4 @@
-class Game {
+class SimpleGame {
     board: string[][];
     currentPlayer: string;
 
@@ -8,7 +8,7 @@ class Game {
     }
 
 
-    handleCellClick(col: number) {
+    handlePlay(col: number) {
         if (this.dropToken(col)) {
             if (this.checkWinner()) {
                 //win message
@@ -89,4 +89,4 @@ class Game {
     }
 }
 
-export { Game }
+export { SimpleGame }
