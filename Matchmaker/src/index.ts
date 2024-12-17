@@ -34,27 +34,40 @@ ioServer.on("connection", (socket) => {
 
     clients.push(socket);
 
-    if(pending.length > 0){
-        let opponent = pending.shift();
-        if(!opponent){
+    socket.on("JoinMatchmaking", (arg) => {
+        let auth = arg.auth;
+        let tokenManagerSocket = io("http://token-manager:3001");
+
+        tokenManagerSocket.on("ValidToken", ()=> {
+            if(pending.length > 0){
+                let opponent = pending.shift();
+                if(!opponent){
+                    pending.push(socket);
+                    return;
+                }
+                
+                let GameManagerSocket = io("http://game-manager:3001");
+                GameManagerSocket.on("GameCreated", (gameId) => {
+                    if(!opponent) return;
+                    opponent.emit("GameFound", gameId);
+                    socket.emit("GameFound", gameId);
+                    GameManagerSocket.close();
+                });
+                console.log("creating game...");
+                GameManagerSocket.emit("CreateGame", null);
+                return;
+            }
             pending.push(socket);
             return;
-        }
-        
-        let GameManagerSocket = io("http://anonymous-game-manager:3001");
-        GameManagerSocket.on("GameCreated", (gameId) => {
-            if(!opponent) return;
-            opponent.emit("GameFound", gameId);
-            socket.emit("GameFound", gameId);
-            GameManagerSocket.close();
         });
-        console.log("creating game...");
-        GameManagerSocket.emit("CreateGame", null);
-        return;
-    }
-    pending.push(socket);
-    return;
-    
+
+        tokenManagerSocket.on("InvalidToken", (arg)=> {
+            socket.emit("InvalidToken", arg);
+            tokenManagerSocket.close();
+        })
+
+        tokenManagerSocket.emit("CheckToken", auth);
+    });
 });
 
 

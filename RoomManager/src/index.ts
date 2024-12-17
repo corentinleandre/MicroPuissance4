@@ -39,32 +39,58 @@ ioServer.on("connection", (socket) => {
     clients.push(socket);
 
     socket.on("newRoom", (arg) => {
-        rooms.set(nextId, socket);
-        socket.emit("JoinedRoom", nextId);
-        clients.forEach((client) => {
-            if(client != socket){
-                client.emit("Rooms", [...rooms.keys()]);
-            }
+        let auth = arg.auth;
+        let tokenManagerSocket = io("http://token-manager:3001");
+
+        tokenManagerSocket.on("ValidToken", ()=> {
+            rooms.set(nextId, socket);
+            socket.emit("JoinedRoom", nextId);
+            clients.forEach((client) => {
+                if(client != socket){
+                    client.emit("Rooms", [...rooms.keys()]);
+                }
+            })
+            nextId+=1;
+        });
+
+        tokenManagerSocket.on("InvalidToken", (arg)=> {
+            socket.emit("InvalidToken", arg);
+            tokenManagerSocket.close();
         })
-        nextId+=1;
-    })
+
+        tokenManagerSocket.emit("CheckToken", auth);
+    });
 
     socket.on("JoinRoom", (arg) => {
-        let opponent = rooms.get(arg);
-        if(!opponent) {socket.emit("JoinRoom Rejected", "Missing Room"); return;}
+        let auth = arg.auth;
+        let tokenManagerSocket = io("http://token-manager:3001");
 
-        let GameManagerSocket = io("http://anonymous-game-manager:3001");
-        GameManagerSocket.on("GameCreated", (gameId) => {
-            if(!opponent) return;
-            opponent.emit("GameFound", gameId);
-            socket.emit("GameFound", gameId);
-            GameManagerSocket.close();
+        tokenManagerSocket.on("ValidToken", ()=> {
+            let opponent = rooms.get(arg.roomId);
+            if(!opponent) {socket.emit("JoinRoom Rejected", "Missing Room"); return;}
+
+            let GameManagerSocket = io("http://game-manager:3001");
+            GameManagerSocket.on("GameCreated", (gameId) => {
+                if(!opponent) return;
+                opponent.emit("GameFound", gameId);
+                socket.emit("GameFound", gameId);
+                GameManagerSocket.close();
+            });
+            console.log("creating game...");
+            GameManagerSocket.emit("CreateGame", null);
+            rooms.delete(arg);
+            clients.forEach((client) => {client.emit("Rooms", [...rooms.keys()]);});
+            return;
         });
-        console.log("creating game...");
-        GameManagerSocket.emit("CreateGame", null);
-        rooms.delete(arg);
-        clients.forEach((client) => {client.emit("Rooms", [...rooms.keys()]);});
-        return;
+
+        tokenManagerSocket.on("InvalidToken", (arg)=> {
+            socket.emit("InvalidToken", arg);
+            tokenManagerSocket.close();
+        })
+
+        tokenManagerSocket.emit("CheckToken", auth);
+
+        
     })
     
     //Send all the room numbers
