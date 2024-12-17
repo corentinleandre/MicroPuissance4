@@ -2,6 +2,9 @@ import { io, Socket } from "socket.io-client";
 import { AuthScreen } from "./Screens/AuthScreen";
 import { ModeScreen } from "./Screens/ModeScreen";
 import { AnonymousChoiceScreen } from "./Screens/AnonymousChoiceScreen";
+import { AnonymousMatchmakerScreen } from "./Screens/AnonymousMatchmakerScreen";
+import { AnonymousRoomsScreen } from "./Screens/AnonymousRoomsScreen";
+import { RoomScreen } from "./Screens/RoomScreen";
 import { GameScreen } from "./Screens/GameScreen";
 import { SocketType } from "./ServerLibs/SocketType";
 
@@ -56,6 +59,7 @@ function makeSocket(socketType:SocketType): Socket | undefined{
         case SocketType.AnonymousMatchmaker:
             return makeAnonymousMatchmakerSocket();
         case SocketType.AnonymousRoomManager:
+            return makeAnonymousRoomManagerSocket();
         case SocketType.GameManager:
         case SocketType.Matchmaker:
         case SocketType.RoomManager:
@@ -92,8 +96,9 @@ function makeAnonymousMatchmakerSocket():Socket | undefined{
     if(!socketAddress) return undefined;
     let anonymousMatchmakerSocket = io(socketAddress);
     if(anonymousMatchmakerSocket){
+        let anonymousMatchmakerScreen = AnonymousMatchmakerScreen.makeScreen(document);
         anonymousMatchmakerSocket.on("GameFound", (newGameId) => {
-            console.log("Game Found with id " + newGameId);
+            anonymousMatchmakerScreen.message.innerHTML = "Game Found with id " + newGameId;
             gameId = newGameId;
             makeSocket(SocketType.AnonymousGameManager);
             anonymousMatchmakerSocket.close();
@@ -102,13 +107,52 @@ function makeAnonymousMatchmakerSocket():Socket | undefined{
     return anonymousMatchmakerSocket;
 }
 
+function makeAnonymousRoomManagerSocket():Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.AnonymousRoomManager);
+    if(!socketAddress) return undefined;
+    let anonymousRoomManagerSocket = io(socketAddress);
+    if(anonymousRoomManagerSocket){
+        let anonymousRoomsScreen = AnonymousRoomsScreen.makeScreen(document);
+
+        anonymousRoomsScreen.newRoom.addEventListener("click", (event) => {
+            anonymousRoomManagerSocket.emit("newRoom");
+        })
+
+        anonymousRoomManagerSocket.on("JoinedRoom", (arg) => {
+            let roomScreen = RoomScreen.makeScreen(document);
+            roomScreen.message.innerHTML = 'In Room ' + arg;
+        })
+
+        anonymousRoomManagerSocket.on("GameFound", (newGameId) => {
+            console.log("Game Found with id " + newGameId);
+            gameId = newGameId;
+            makeSocket(SocketType.AnonymousGameManager);
+            anonymousRoomManagerSocket.close();
+        });
+
+        anonymousRoomManagerSocket.on("Rooms", (list) => {
+            anonymousRoomsScreen.rooms.innerHTML = '';
+            for(let roomId of list){
+                let button = document.createElement("button");
+                button.innerHTML = "Room " + roomId;
+                button.addEventListener("click", ()=>{
+                    anonymousRoomManagerSocket.emit("JoinRoom", roomId);
+                });
+                anonymousRoomsScreen.rooms.appendChild(button);
+                anonymousRoomsScreen.rooms.appendChild(document.createElement("br"));
+            }
+        })
+    }
+    return anonymousRoomManagerSocket;
+}
+
 function makeAnonymousGameManagerSocket():Socket | undefined{
     let socketAddress = socketAddresses.get(SocketType.AnonymousGameManager);
     if(!socketAddress) return undefined;
     let anonymousGameManagerSocket = io(socketAddress);
     if(anonymousGameManagerSocket){
         let gameScreen = GameScreen.makeScreen(document);
-        anonymousGameManagerSocket.on("Joined", (arg) => {
+        anonymousGameManagerSocket.on("JoinedGame", (arg) => {
             whichPlayer = arg;
             if(whichPlayer == 'X'){
                 gameScreen.message.innerHTML = "Your turn";
@@ -118,6 +162,7 @@ function makeAnonymousGameManagerSocket():Socket | undefined{
         })
 
         anonymousGameManagerSocket.on("UpdateBoard", (arg) => {
+            console.log("Received UpdatedBoard");
             let newBoard = arg.board;
             let nextPlayer = arg.player;
             gameScreen.board.innerHTML = '';
@@ -148,7 +193,7 @@ function makeAnonymousGameManagerSocket():Socket | undefined{
             }
         })
 
-        anonymousGameManagerSocket.emit("Join", gameId);
+        anonymousGameManagerSocket.emit("JoinGame", gameId);
     }
     return anonymousGameManagerSocket;
 }

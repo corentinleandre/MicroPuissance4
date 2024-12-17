@@ -14,7 +14,8 @@ const ioServer = new Server(3001, {
 });
 
 const clients: Socket[] = [];
-const pending: Socket[] = [];
+const rooms: Map<Number,Socket> = new Map<Number,Socket>();
+var nextId:number = 0;
 
 ioServer.on("connection", (socket) => {
 
@@ -24,23 +25,34 @@ ioServer.on("connection", (socket) => {
             clients.splice(clientsIndex, 1); // 2nd parameter means remove one item only
         }
 
-        const pendingIndex = clients.indexOf(socket);
-        if (pendingIndex > -1) { // only splice array when item is found
-            clients.splice(pendingIndex, 1); // 2nd parameter means remove one item only
+        for(let room of rooms){
+            if(room[1] == socket){
+                clients.forEach((client) => {client.emit("Rooms", [...rooms.keys()]);})
+                rooms.delete(room[0]);
+                return;
+            }
         }
-    });
+    })
 
     console.log("A user connected");
 
     clients.push(socket);
 
-    if(pending.length > 0){
-        let opponent = pending.shift();
-        if(!opponent){
-            pending.push(socket);
-            return;
-        }
-        
+    socket.on("newRoom", (arg) => {
+        rooms.set(nextId, socket);
+        socket.emit("JoinedRoom", nextId);
+        clients.forEach((client) => {
+            if(client != socket){
+                client.emit("Rooms", [...rooms.keys()]);
+            }
+        })
+        nextId+=1;
+    })
+
+    socket.on("JoinRoom", (arg) => {
+        let opponent = rooms.get(arg);
+        if(!opponent) {socket.emit("JoinRoom Rejected", "Missing Room"); return;}
+
         let GameManagerSocket = io("http://anonymous-game-manager:3001");
         GameManagerSocket.on("GameCreated", (gameId) => {
             if(!opponent) return;
@@ -50,10 +62,14 @@ ioServer.on("connection", (socket) => {
         });
         console.log("creating game...");
         GameManagerSocket.emit("CreateGame", null);
+        rooms.delete(arg);
+        clients.forEach((client) => {client.emit("Rooms", [...rooms.keys()]);});
         return;
-    }
-    pending.push(socket);
-    return;
+    })
+    
+    //Send all the room numbers
+    let toSend = [...rooms.keys()];
+    socket.emit("Rooms", toSend);
     
 });
 

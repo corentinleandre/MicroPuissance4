@@ -68,6 +68,13 @@ services:
     ports:
       - 3002:3001
 
+  anonymous-room-manager:
+    build: ./AnonymousRoomManager
+    networks:
+      - outnw
+    ports:
+      - 3003:3001
+
   anonymous-game-manager:
     build: ./AnonymousGameManager
     networks:

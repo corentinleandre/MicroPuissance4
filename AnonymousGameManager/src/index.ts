@@ -28,7 +28,7 @@ ioServer.on("connection", (socket) => {
         nextId++;
     });
 
-    socket.on("Join", (gameId) => {
+    socket.on("JoinGame", (gameId) => {
         let game = games.get(gameId);
         if(!game){
             socket.emit("Rejected Join", "Invalid GameId");
@@ -39,7 +39,7 @@ ioServer.on("connection", (socket) => {
             socket.emit("Rejected Join", "Game Full");
         }
 
-        socket.emit("Joined", game.getWhichPlayer(socket));
+        socket.emit("JoinedGame", game.getWhichPlayer(socket));
         connections.set(socket, game);
         socket.emit("UpdateBoard", {"board":game.board, "player":game.currentPlayer});
     });
