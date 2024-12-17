@@ -1,0 +1,25 @@
+{
+  "name": "auth-server",
+  "version": "1.0.0",
+  "description": "The backend authenticator for MicroPuissance4",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js",
+    "build": "npx rimraf ./build && npx tsc",
+    "start": "node build/index.js"
+  },
+  "author": "Corentin LEANDRE",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/lodash": "^4.17.0",
+    "@types/node": "^20.11.19",
+    "dotenv": "^16.4.4",
+    "lodash": "^4.17.21",
+    "rimraf": "^5.0.1",
+    "socket.io": "^4.7.4",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}
