@@ -14,7 +14,7 @@ enum ClientMode {
 }
 
 const ip = "localhost"
-var token = "";
+var auth = {"username":"", "token":""}
 var mode:ClientMode = ClientMode.Anonymous;
 var gameId: Number;
 var whichPlayer = '';
@@ -78,13 +78,14 @@ function makeAuthenticatorSocket(): Socket | undefined{
                 if(event.cancelable){
                     event.preventDefault();
                 }
+                auth.username = authscreen.usernameInput.value;
                 authSocket.emit("Auth", {"Username" : authscreen.usernameInput.value, "Password" : authscreen.passwordInput.value});
             })
         });
     
         authSocket.on("NewToken", (newToken) =>{
-            token = newToken;
-            console.log(token);
+            auth.token = newToken;
+            console.log(auth.token);
             authSocket.close();
         });
     }
@@ -203,11 +204,12 @@ window.addEventListener('load', () => {
     let modeScreen = ModeScreen.makeScreen(document);
 
     modeScreen.authenticatedModeButton.addEventListener("click", (event) => {
+        mode = ClientMode.Authenticated;
         makeSocket(SocketType.Authenticator);
     })
 
     modeScreen.anonymousModeButton.addEventListener("click", (event) => {
-        console.log("Clicked anonymous mode");
+        mode = ClientMode.Anonymous;
         let anonymousChoiceScreen = AnonymousChoiceScreen.makeScreen(document);
         anonymousChoiceScreen.matchmaking.addEventListener("click", (event) => {
             makeSocket(SocketType.AnonymousMatchmaker);

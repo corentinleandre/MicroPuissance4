@@ -36,6 +36,15 @@ daotokenprom.then((daotoken) =>{
                 socket.emit("CreatedToken", token.dbid);
             })
         })
+
+        socket.on("CheckToken", (auth) => {
+            daotoken.getTokenByDBID(auth.token).then((token) => {
+                if(!token){ socket.emit("InvalidToken", auth.username); return;}
+                if(token.user != auth.username){ socket.emit("InvalidToken", auth.username); return;}
+                daotoken.saveToken(token);
+                socket.emit("ValidToken", token.user);
+            });
+        })
     });
 })
 
