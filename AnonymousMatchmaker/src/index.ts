@@ -27,14 +27,16 @@ ioServer.on("connection", (socket) => {
             pending.push(socket);
             return;
         }
-
-        let GameManagerSocket = io("http://game-manager:3001");
+        
+        let GameManagerSocket = io("http://anonymous-game-manager:3001");
         GameManagerSocket.on("GameCreated", (gameId) => {
+            if(!opponent) return;
             opponent.emit("GameFound", gameId);
             socket.emit("GameFound", gameId);
             GameManagerSocket.close();
         });
-        GameManagerSocket.emit("CreateGame");
+        console.log("creating game...");
+        GameManagerSocket.emit("CreateGame", null);
         return;
     }
     pending.push(socket);

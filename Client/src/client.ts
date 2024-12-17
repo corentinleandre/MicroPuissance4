@@ -92,8 +92,9 @@ function makeAnonymousMatchmakerSocket():Socket | undefined{
     if(!socketAddress) return undefined;
     let anonymousMatchmakerSocket = io(socketAddress);
     if(anonymousMatchmakerSocket){
-        anonymousMatchmakerSocket.on("GameFound", (gameId) => {
-            this.gameId = gameId;
+        anonymousMatchmakerSocket.on("GameFound", (newGameId) => {
+            console.log("Game Found with id " + newGameId);
+            gameId = newGameId;
             makeSocket(SocketType.AnonymousGameManager);
             anonymousMatchmakerSocket.close();
         });
@@ -108,8 +109,8 @@ function makeAnonymousGameManagerSocket():Socket | undefined{
     if(anonymousGameManagerSocket){
         let gameScreen = GameScreen.makeScreen(document);
         anonymousGameManagerSocket.on("Joined", (arg) => {
-            this.whichPlayer = arg;
-            if(this.whichPlayer == 'X'){
+            whichPlayer = arg;
+            if(whichPlayer == 'X'){
                 gameScreen.message.innerHTML = "Your turn";
             }else{
                 gameScreen.message.innerHTML = "Waiting for opponent";
@@ -134,7 +135,7 @@ function makeAnonymousGameManagerSocket():Socket | undefined{
                     cell.dataset.row = row.toString();
                     cell.dataset.col = col.toString();
                     cell.addEventListener('click', () => {
-                        anonymousGameManagerSocket.emit("Play", {"player": this.whichPlayer, "col":col});
+                        anonymousGameManagerSocket.emit("Play", col);
                     });
                     gameScreen.board.appendChild(cell);
                 }
@@ -160,7 +161,8 @@ window.addEventListener('load', () => {
         makeSocket(SocketType.Authenticator);
     })
 
-    modeScreen.authenticatedModeButton.addEventListener("click", (event) => {
+    modeScreen.anonymousModeButton.addEventListener("click", (event) => {
+        console.log("Clicked anonymous mode");
         let anonymousChoiceScreen = AnonymousChoiceScreen.makeScreen(document);
         anonymousChoiceScreen.matchmaking.addEventListener("click", (event) => {
             makeSocket(SocketType.AnonymousMatchmaker);

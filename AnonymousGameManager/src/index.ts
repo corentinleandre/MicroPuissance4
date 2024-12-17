@@ -24,6 +24,7 @@ ioServer.on("connection", (socket) => {
     socket.on("CreateGame", (arg) => {
         games.set(nextId, new NetworkGame());
         socket.emit("GameCreated", nextId);
+        console.log("Created game with id " + nextId);
         nextId++;
     });
 
@@ -40,16 +41,17 @@ ioServer.on("connection", (socket) => {
 
         socket.emit("Joined", game.getWhichPlayer(socket));
         connections.set(socket, game);
+        socket.emit("UpdateBoard", {"board":game.board, "player":game.currentPlayer});
     });
 
-    socket.on("Play", (arg) => {
+    socket.on("Play", (col) => {
         let game = connections.get(socket);
         if(!game){
             socket.emit("Rejected Play", "Game finished or missing");
             return;
         }
-        if(arg.player == game.getWhichPlayer(socket)){
-            game.handlePlay(arg.col);
+        if(game.getWhichPlayer(socket) == game.currentPlayer){
+            game.handlePlay(col);
             if(game.isReady()){
                 game.player1?.emit("UpdateBoard", {"board":game.board, "player":game.currentPlayer});
                 game.player2?.emit("UpdateBoard", {"board":game.board, "player":game.currentPlayer});

@@ -66,14 +66,14 @@ services:
     networks:
       - outnw
     ports:
-      - 3001:3002
+      - 3002:3001
 
   anonymous-game-manager:
     build: ./AnonymousGameManager
     networks:
       - outnw
     ports:
-      - 3001:3004
+      - 3004:3001
   
   client:
     build: ./Client

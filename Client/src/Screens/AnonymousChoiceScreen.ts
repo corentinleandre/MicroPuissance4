@@ -16,10 +16,10 @@ class AnonymousChoiceScreen {
         doc.body.replaceChildren(); //Empty the document
 
         let matchmakingButton = doc.createElement("button");
-        matchmakingButton.innerHTML = "Authenticated Mode";
+        matchmakingButton.innerHTML = "Matchmaking";
 
         let roomsButton = doc.createElement("button");
-        roomsButton.innerHTML = "Anonymous Mode";
+        roomsButton.innerHTML = "Rooms";
 
         doc.body.appendChild(matchmakingButton);
         doc.body.appendChild(doc.createElement("br"));
