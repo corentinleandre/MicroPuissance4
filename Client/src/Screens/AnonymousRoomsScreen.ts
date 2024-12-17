@@ -24,7 +24,7 @@ class AnonymousRoomsScreen {
         let message = doc.createElement("div");
         message.setAttribute("id", "message");
         message.setAttribute("class", "message");
-        message.innerHTML = "Matchmaking pending...";
+        message.innerHTML = "Choose a room or create your own";
 
         let newRoom = doc.createElement("button");
         newRoom.setAttribute("id", "newRoom");
