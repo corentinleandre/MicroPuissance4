@@ -61,6 +61,20 @@ services:
     depends_on:
       - db
   
+  anonymous-matchmaker:
+    build: ./AnonymousMatchmaker
+    networks:
+      - outnw
+    ports:
+      - 3001:3002
+
+  anonymous-game-manager:
+    build: ./AnonymousGameManager
+    networks:
+      - outnw
+    ports:
+      - 3001:3004
+  
   client:
     build: ./Client
     networks:

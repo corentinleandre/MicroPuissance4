@@ -61,8 +61,6 @@ class AuthScreen {
 
         return new AuthScreen(form, UsernameLabel, UsernameInput, PasswordLabel, PasswordInput, submit);
     }
-
-
 }
 
 export { AuthScreen }
