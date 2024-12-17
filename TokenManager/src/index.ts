@@ -31,9 +31,16 @@ daotokenprom.then((daotoken) =>{
     
     io.on("connection", (socket) => {
         socket.on("CreateToken", async (username) => {
-            let token = new Token(username);
-            daotoken.saveToken(token).then((token) => {
-                socket.emit("CreatedToken", token.dbid);
+            daotoken.getTokenByUser(username).then((token) => {
+                let toSave:Token;
+                if(!token){
+                    toSave = new Token(username);
+                }else{
+                    toSave = token;
+                }
+                daotoken.saveToken(toSave).then((token) => {
+                    socket.emit("CreatedToken", token.dbid);
+                })
             })
         })
 

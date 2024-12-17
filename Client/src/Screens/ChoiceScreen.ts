@@ -1,4 +1,4 @@
-class AnonymousChoiceScreen {
+class ChoiceScreen {
 
     matchmaking: HTMLButtonElement;
     rooms: HTMLButtonElement;
@@ -11,7 +11,7 @@ class AnonymousChoiceScreen {
         this.rooms = rooms;
     }
 
-    static makeScreen(doc:Document) : AnonymousChoiceScreen
+    static makeScreen(doc:Document) : ChoiceScreen
 {
         doc.body.replaceChildren(); //Empty the document
 
@@ -25,8 +25,8 @@ class AnonymousChoiceScreen {
         doc.body.appendChild(doc.createElement("br"));
         doc.body.appendChild(roomsButton);
 
-        return new AnonymousChoiceScreen(matchmakingButton, roomsButton);
+        return new ChoiceScreen(matchmakingButton, roomsButton);
     }
 }
 
-export { AnonymousChoiceScreen }
+export { ChoiceScreen }

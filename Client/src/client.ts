@@ -1,7 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import { AuthScreen } from "./Screens/AuthScreen";
 import { ModeScreen } from "./Screens/ModeScreen";
-import { AnonymousChoiceScreen } from "./Screens/AnonymousChoiceScreen";
+import { ChoiceScreen } from "./Screens/ChoiceScreen";
 import { AnonymousMatchmakerScreen } from "./Screens/AnonymousMatchmakerScreen";
 import { AnonymousRoomsScreen } from "./Screens/AnonymousRoomsScreen";
 import { RoomScreen } from "./Screens/RoomScreen";
@@ -61,35 +61,13 @@ function makeSocket(socketType:SocketType): Socket | undefined{
         case SocketType.AnonymousRoomManager:
             return makeAnonymousRoomManagerSocket();
         case SocketType.GameManager:
+            return makeGameManagerSocket();
         case SocketType.Matchmaker:
+            return makeMatchmakerSocket();
         case SocketType.RoomManager:
+            return makeRoomManagerSocket();
     }
     return undefined
-}
-
-function makeAuthenticatorSocket(): Socket | undefined{
-    let socketAddress = socketAddresses.get(SocketType.Authenticator);
-    if(!socketAddress) return undefined;
-    let authSocket = io(socketAddress);
-    if(authSocket){
-        authSocket.on("AskAuth", (arg) => {
-            let authscreen = AuthScreen.makeScreen(document);
-            authscreen.form.addEventListener("submit", (event) => {
-                if(event.cancelable){
-                    event.preventDefault();
-                }
-                auth.username = authscreen.usernameInput.value;
-                authSocket.emit("Auth", {"Username" : authscreen.usernameInput.value, "Password" : authscreen.passwordInput.value});
-            })
-        });
-    
-        authSocket.on("NewToken", (newToken) =>{
-            auth.token = newToken;
-            console.log(auth.token);
-            authSocket.close();
-        });
-    }
-    return authSocket;
 }
 
 function makeAnonymousMatchmakerSocket():Socket | undefined{
@@ -199,6 +177,150 @@ function makeAnonymousGameManagerSocket():Socket | undefined{
     return anonymousGameManagerSocket;
 }
 
+function makeAuthenticatorSocket(): Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.Authenticator);
+    if(!socketAddress) return undefined;
+    let authSocket = io(socketAddress);
+    if(authSocket){
+        authSocket.on("AskAuth", (arg) => {
+            let authscreen = AuthScreen.makeScreen(document);
+            authscreen.form.addEventListener("submit", (event) => {
+                if(event.cancelable){
+                    event.preventDefault();
+                }
+                auth.username = authscreen.usernameInput.value;
+                authSocket.emit("Auth", {"Username" : authscreen.usernameInput.value, "Password" : authscreen.passwordInput.value});
+            })
+        });
+    
+        authSocket.on("NewToken", (newToken) =>{
+            auth.token = newToken;
+            console.log(auth.token);
+            authSocket.close();
+            let choiceScreen = ChoiceScreen.makeScreen(document);
+            choiceScreen.matchmaking.addEventListener("click", (event) => {
+                makeSocket(SocketType.Matchmaker);
+            });
+            choiceScreen.rooms.addEventListener("click", (event) => {
+                makeSocket(SocketType.RoomManager);
+            });
+        });
+    }
+    return authSocket;
+}
+
+function makeMatchmakerSocket():Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.AnonymousMatchmaker);
+    if(!socketAddress) return undefined;
+    let matchmakerSocket = io(socketAddress);
+    matchmakerSocket.emit("JoinMatchmaking", {"auth": auth});
+    if(matchmakerSocket){
+        let matchmakerScreen = AnonymousMatchmakerScreen.makeScreen(document);
+        matchmakerSocket.on("GameFound", (newGameId) => {
+            matchmakerScreen.message.innerHTML = "Game Found with id " + newGameId;
+            gameId = newGameId;
+            makeSocket(SocketType.AnonymousGameManager);
+            matchmakerSocket.close();
+        });
+    }
+    matchmakerSocket.on("InvalidToken", () => {
+        console.log("Token is invalid, could not join matchmaking");
+        matchmakerSocket.close();
+    })
+    return matchmakerSocket;
+}
+
+function makeRoomManagerSocket():Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.RoomManager);
+    if(!socketAddress) return undefined;
+    let roomManagerSocket = io(socketAddress);
+    if(roomManagerSocket){
+        let roomsScreen = AnonymousRoomsScreen.makeScreen(document);
+
+        roomsScreen.newRoom.addEventListener("click", (event) => {
+            roomManagerSocket.emit("newRoom", {"auth":auth});
+        })
+
+        roomManagerSocket.on("JoinedRoom", (arg) => {
+            let roomScreen = RoomScreen.makeScreen(document);
+            roomScreen.message.innerHTML = 'In Room ' + arg;
+        })
+
+        roomManagerSocket.on("GameFound", (newGameId) => {
+            console.log("Game Found with id " + newGameId);
+            gameId = newGameId;
+            makeSocket(SocketType.GameManager);
+            roomManagerSocket.close();
+        });
+
+        roomManagerSocket.on("Rooms", (list) => {
+            roomsScreen.rooms.innerHTML = '';
+            for(let roomId of list){
+                let button = document.createElement("button");
+                button.innerHTML = "Room " + roomId;
+                button.addEventListener("click", ()=>{
+                    roomManagerSocket.emit("JoinRoom", {"roomId":roomId, "auth":auth});
+                });
+                roomsScreen.rooms.appendChild(button);
+                roomsScreen.rooms.appendChild(document.createElement("br"));
+            }
+        })
+    }
+    return roomManagerSocket;
+}
+
+function makeGameManagerSocket():Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.GameManager);
+    if(!socketAddress) return undefined;
+    let gameManagerSocket = io(socketAddress);
+    if(gameManagerSocket){
+        let gameScreen = GameScreen.makeScreen(document);
+        gameManagerSocket.on("JoinedGame", (arg) => {
+            whichPlayer = arg;
+            if(whichPlayer == 'X'){
+                gameScreen.message.innerHTML = "Your turn";
+            }else{
+                gameScreen.message.innerHTML = "Waiting for opponent";
+            }
+        })
+
+        gameManagerSocket.on("UpdateBoard", (arg) => {
+            console.log("Received UpdatedBoard");
+            let newBoard = arg.board;
+            let nextPlayer = arg.player;
+            gameScreen.board.innerHTML = '';
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+            
+                    if (newBoard[row][col] === 'X') {
+                        cell.style.backgroundColor = 'red';
+                    } else if (newBoard[row][col] === 'O') {
+                        cell.style.backgroundColor = 'yellow';
+                    }
+            
+                    cell.dataset.row = row.toString();
+                    cell.dataset.col = col.toString();
+                    cell.addEventListener('click', () => {
+                        gameManagerSocket.emit("Play", {"col":col, "auth":auth});
+                    });
+                    gameScreen.board.appendChild(cell);
+                }
+            }
+
+            if(nextPlayer == whichPlayer){
+                gameScreen.message.innerHTML = "Your turn";
+            }else{
+                gameScreen.message.innerHTML = "Waiting for opponent";
+            }
+        })
+
+        gameManagerSocket.emit("JoinGame", {"gameId":gameId, "auth":auth});
+    }
+    return gameManagerSocket;
+}
+
 window.addEventListener('load', () => {
 
     let modeScreen = ModeScreen.makeScreen(document);
@@ -210,11 +332,11 @@ window.addEventListener('load', () => {
 
     modeScreen.anonymousModeButton.addEventListener("click", (event) => {
         mode = ClientMode.Anonymous;
-        let anonymousChoiceScreen = AnonymousChoiceScreen.makeScreen(document);
-        anonymousChoiceScreen.matchmaking.addEventListener("click", (event) => {
+        let choiceScreen = ChoiceScreen.makeScreen(document);
+        choiceScreen.matchmaking.addEventListener("click", (event) => {
             makeSocket(SocketType.AnonymousMatchmaker);
         });
-        anonymousChoiceScreen.rooms.addEventListener("click", (event) => {
+        choiceScreen.rooms.addEventListener("click", (event) => {
             makeSocket(SocketType.AnonymousRoomManager);
         });
     })

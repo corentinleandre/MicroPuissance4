@@ -18,11 +18,18 @@ var daouserprom = DAOUser.create(connection);
 
 const ip = "localhost"
 
-let test_user : User = new User("IlCorentino","StrikesBack");
+let test_user1 : User = new User("IlCorentino","StrikesBack");
+let test_user2 : User = new User("JerrX", "WasHere");
 daouserprom.then((daouser) => {
     //for test purposes
-    daouser.saveUser(test_user).then(()=>{
-        console.log("save success");
+    daouser.saveUser(test_user1).then(()=>{
+        console.log("save 1 success");
+    }).catch((err) => {
+        console.log(err);
+    })
+
+    daouser.saveUser(test_user2).then(()=>{
+        console.log("save 2 success");
     }).catch((err) => {
         console.log(err);
     })
