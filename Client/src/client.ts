@@ -12,10 +12,11 @@ enum ClientMode {
 const ip = "localhost"
 var token = "";
 var mode:ClientMode = ClientMode.Anonymous;
+var gameId: Number;
 
 console.log("launched");
 
-const socketAdresses: Map<SocketType, string> = new Map<SocketType,string>([
+const socketAddresses: Map<SocketType, string> = new Map<SocketType,string>([
     [SocketType.Authenticator,"http://" + ip + ":3001"],
     [SocketType.AnonymousMatchmaker, "http://" + ip + ":3002"],
     [SocketType.AnonymousRoomManager, "http://" + ip + ":3003"],
@@ -49,7 +50,9 @@ function makeSocket(socketType:SocketType): Socket | undefined{
         case SocketType.Authenticator:
             return makeAuthenticatorSocket();
         case SocketType.AnonymousGameManager:
+            return makeAnonymousGameManagerSocket();
         case SocketType.AnonymousMatchmaker:
+            return makeAnonymousMatchmakerSocket();
         case SocketType.AnonymousRoomManager:
         case SocketType.GameManager:
         case SocketType.Matchmaker:
@@ -59,9 +62,9 @@ function makeSocket(socketType:SocketType): Socket | undefined{
 }
 
 function makeAuthenticatorSocket(): Socket | undefined{
-    let socketAdress = socketAdresses.get(SocketType.Authenticator);
-    if(!socketAdress) return undefined;
-    let authSocket = io(socketAdress);
+    let socketAddress = socketAddresses.get(SocketType.Authenticator);
+    if(!socketAddress) return undefined;
+    let authSocket = io(socketAddress);
     if(authSocket){
         authSocket.on("AskAuth", (arg) => {
             let authscreen = AuthScreen.makeScreen(document);
@@ -80,6 +83,30 @@ function makeAuthenticatorSocket(): Socket | undefined{
         });
     }
     return authSocket;
+}
+
+function makeAnonymousMatchmakerSocket():Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.AnonymousMatchmaker);
+    if(!socketAddress) return undefined;
+    let anonymousMatchmakerSocket = io(socketAddress);
+    if(anonymousMatchmakerSocket){
+        anonymousMatchmakerSocket.on("GameFound", (gameId) => {
+            this.gameId = gameId;
+            makeSocket(SocketType.AnonymousGameManager);
+            anonymousMatchmakerSocket.close();
+        });
+    }
+    return anonymousMatchmakerSocket;
+}
+
+function makeAnonymousGameManagerSocket():Socket | undefined{
+    let socketAddress = socketAddresses.get(SocketType.AnonymousGameManager);
+    if(!socketAddress) return undefined;
+    let anonymousGameManagerSocket = io(socketAddress);
+    if(anonymousGameManagerSocket){
+        
+    }
+    return anonymousGameManagerSocket;
 }
 
 window.addEventListener('load', () => {
