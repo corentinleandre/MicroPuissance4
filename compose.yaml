@@ -81,6 +81,27 @@ services:
       - outnw
     ports:
       - 3004:3001
+
+  matchmaker:
+    build: ./Matchmaker
+    networks:
+      - outnw
+    ports:
+      - 3005:3001
+
+  room-manager:
+    build: ./RoomManager
+    networks:
+      - outnw
+    ports:
+      - 3006:3001
+
+  game-manager:
+    build: ./GameManager
+    networks:
+      - outnw
+    ports:
+      - 3007:3001
   
   client:
     build: ./Client
